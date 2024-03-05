@@ -213,7 +213,7 @@ void Workspaces::doUpdate() {
   }
 
   spdlog::trace("Updating workspace states");
-  auto updated_workspaces = gIPC->getSocket1JsonReply("workspaces");
+  auto updatedWorkspaces = gIPC->getSocket1JsonReply("workspaces");
   for (auto &workspace : m_workspaces) {
     // active
     workspace->setActive(workspace->name() == m_activeWorkspaceName ||
@@ -234,13 +234,16 @@ void Workspaces::doUpdate() {
     }
 
     // update m_output
-    auto updated_workspace =
-        std::find_if(updated_workspaces.begin(), updated_workspaces.end(), [&workspace](auto &w) {
+    auto updatedWorkspace =
+        std::find_if(updatedWorkspaces.begin(), updatedWorkspaces.end(), [&workspace](auto &w) {
           auto wNameRaw = w["name"].asString();
           auto wName = wNameRaw.starts_with("special:") ? wNameRaw.substr(8) : wNameRaw;
           return wName == workspace->name();
         });
-    workspace->setOutput((*updated_workspace)["monitor"].asString());
+
+    if (updatedWorkspace != updatedWorkspaces.end()) {
+      workspace->setOutput((*updatedWorkspace)["monitor"].asString());
+    }
 
     workspace->update(m_format, workspaceIcon);
   }
