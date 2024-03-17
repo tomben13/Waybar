@@ -194,6 +194,10 @@ void Workspaces::doUpdate() {
   for (auto &[workspaceData, clientsData] : m_workspacesToCreate) {
     createWorkspace(workspaceData, clientsData);
   }
+  if (!m_workspacesToCreate.empty()) {
+    updateWindowCount();
+    sortWorkspaces();
+  }
   m_workspacesToCreate.clear();
 
   // get all active workspaces
@@ -397,6 +401,8 @@ void Workspaces::onWorkspaceMoved(std::string const &payload) {
     spdlog::debug("Removing workspace because it was moved to another monitor: {}");
     onWorkspaceDestroyed(workspaceName);
   }
+  // Update active workspace
+  m_activeWorkspaceName = (gIPC->getSocket1JsonReply("activeworkspace"))["name"].asString();
 }
 
 void Workspaces::onWorkspaceRenamed(std::string const &payload) {
@@ -826,8 +832,8 @@ void Workspaces::init() {
   m_activeWorkspaceName = (gIPC->getSocket1JsonReply("activeworkspace"))["name"].asString();
 
   initializeWorkspaces();
-  updateWindowCount();
-  sortWorkspaces();
+  /* updateWindowCount(); */
+  /* sortWorkspaces(); */
   dp.emit();
 }
 
